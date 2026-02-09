@@ -1,0 +1,30 @@
+__pycache__/
+.env
+.env.local
+.venv
+venv/
+node_modules/
+dist/
+build/
+*.log
+*.db
+migrate_add_columns.py
+*.pyc
+todo_backend.egg-info/
+
+
+
+
+
+
+.vercel
+# archives
+*.tar
+*.zip
+
+# node
+node_modules/
+
+# builds
+dist/
+build/

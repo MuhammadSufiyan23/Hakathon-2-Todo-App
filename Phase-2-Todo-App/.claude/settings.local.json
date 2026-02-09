@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr :8000)",
+      "Bash(python main_with_routes.py)",
+      "Bash(curl http://localhost:8007/)",
+      "Bash(python main_debug.py)",
+      "Bash(curl http://localhost:8008/)",
+      "Bash(curl http://localhost:8000/)",
+      "Bash(python main.py)",
+      "Bash(curl http://localhost:8000/api/tasks/)"
+    ]
+  }
+}

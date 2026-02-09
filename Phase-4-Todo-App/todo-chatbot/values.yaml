@@ -1,0 +1,93 @@
+# Default values for todo-chatbot
+# This is a YAML-formatted file for local Minikube deployment
+
+# Backend Configuration
+backend:
+  replicaCount: 1
+
+  image:
+    repository: todo-backend
+    tag: latest
+    pullPolicy: Never  # Use Never for local Minikube images
+
+  service:
+    type: NodePort
+    port: 8000
+    nodePort: 30800  # Access backend at minikube-ip:30800
+
+  env:
+    databaseUrl: "sqlite:///./todo.db"
+
+  secrets:
+    # IMPORTANT: Change these values for production!
+    cohereApiKey: "skxxxxxxxxxxxxxxxxx"
+    betterAuthSecret: "sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Frontend Configuration
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: todo-frontend
+    tag: latest
+    pullPolicy: Never  # Use Never for local Minikube images
+
+  service:
+    type: NodePort
+    port: 3000
+    nodePort: 30300  # Access frontend at minikube-ip:30300
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Service Account
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# Pod Annotations and Labels
+podAnnotations: {}
+podLabels: {}
+
+# Security Context
+podSecurityContext: {}
+securityContext: {}
+
+# Ingress (disabled for local development)
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: todo-app.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Autoscaling (disabled for local development)
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+# Node Selection
+nodeSelector: {}
+tolerations: []
+affinity: {}

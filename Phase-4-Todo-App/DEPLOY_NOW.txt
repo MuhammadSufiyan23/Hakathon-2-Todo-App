@@ -1,0 +1,72 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║              RUN THESE COMMANDS TO DEPLOY NOW                  ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+The minikube command is not available in my bash environment, but I've
+prepared everything for you. Please run these commands:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPTION 1: Run the batch script (EASIEST)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Open Command Prompt and run:
+
+cd "C:\Users\king\Desktop\New folder\Phase-3-Todo-Apps"
+load-and-deploy.bat
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPTION 2: Run commands manually
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Open PowerShell or Command Prompt and run:
+
+# Load backend image
+minikube image load todo-backend:latest
+
+# Load frontend image  
+minikube image load todo-frontend:latest
+
+# Restart deployments
+kubectl rollout restart deployment todo-backend
+kubectl rollout restart deployment todo-frontend
+
+# Wait 30 seconds
+timeout /t 30
+
+# Check status
+kubectl get pods
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXPECTED OUTPUT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NAME                             READY   STATUS    RESTARTS   AGE
+todo-backend-xxxxxxxxxx-xxxxx    1/1     Running   0          30s
+todo-frontend-xxxxxxxxxx-xxxxx   1/1     Running   0          30s
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ACCESS YOUR APPLICATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend:  http://192.168.49.2:30300
+Backend:   http://192.168.49.2:30800
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VERIFY DEPLOYMENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+kubectl get all
+kubectl logs -l component=frontend
+kubectl logs -l component=backend
+
