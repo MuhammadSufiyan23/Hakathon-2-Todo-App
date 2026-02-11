@@ -1,0 +1,200 @@
+# Alerting rules for critical metrics
+groups:
+  - name: todo-app-alerts
+    rules:
+      # High error rate alerts
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5..|4.."}[5m])) by (service) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "The service {{ $labels.service }} has had an error rate of {{ $value }} over the last 5 minutes"
+
+      # High latency alerts
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High latency on {{ $labels.service }}"
+          description: "The 95th percentile latency for {{ $labels.service }} is {{ $value }} seconds"
+
+      # Service down alerts
+      - alert: ServiceDown
+        expr: up{service=~"todo-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.service }} is down"
+          description: "The service {{ $labels.service }} has been down for more than 1 minute"
+
+      # Dapr sidecar alerts
+      - alert: DaprSidecarNotReady
+        expr: dapr_sidecar_ready == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Dapr sidecar not ready"
+          description: "Dapr sidecar for app {{ $labels.app_id }} is not ready"
+
+      # High Dapr error rate
+      - alert: HighDaprErrorRate
+        expr: |
+          sum(rate(dapr_http_server_request_count{status_code=~"5..|4.."}[5m])) by (app_id) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High error rate in Dapr for {{ $labels.app_id }}"
+          description: "Dapr for app {{ $labels.app_id }} has error rate of {{ $value }}"
+
+      # Low Dapr component health
+      - alert: DaprComponentUnhealthy
+        expr: dapr_component_loaded == 0
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Dapr component unhealthy"
+          description: "Dapr component {{ $labels.component_name }} for app {{ $labels.app_id }} is not loaded"
+
+      # High task creation failure rate
+      - alert: HighTaskCreationFailureRate
+        expr: |
+          rate(task_operations_total{operation="create", result="failure"}[5m]) / rate(task_operations_total{operation="create"}[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High task creation failure rate"
+          description: "Task creation failure rate is {{ $value }}"
+
+      # Database connection issues
+      - alert: DatabaseConnectionIssues
+        expr: |
+          rate(database_connection_errors_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Database connection issues"
+          description: "Database connection errors detected, rate is {{ $value }}"
+
+      # Event processing backlog
+      - alert: EventProcessingBacklog
+        expr: |
+          dapr_pubsub_subscriber_message_queue_length > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Event processing backlog"
+          description: "Event processing backlog of {{ $value }} messages detected"
+
+      # Resource exhaustion alerts
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on node {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemFree_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% on node {{ $labels.instance }}"
+
+      - alert: PodRestartSpikes
+        expr: |
+          increase(kube_pod_container_status_restarts_total[10m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High pod restart rate"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times in the last 10 minutes"
+
+      # Disk space alerts
+      - alert: DiskSpaceLow
+        expr: |
+          100 - ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes) > 90
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% on {{ $labels.instance }} at {{ $labels.mountpoint }}"
+
+  - name: dapr-alerts
+    rules:
+      # Dapr specific alerts
+      - alert: DaprRuntimeNotStarted
+        expr: dapr_runtime_started == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Dapr runtime not started"
+          description: "Dapr runtime for app {{ $labels.app_id }} has not started"
+
+      - alert: HighDaprStateStoreLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(dapr_statestore_operation_duration_seconds_bucket[5m])) by (le, app_id)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High Dapr state store latency for {{ $labels.app_id }}"
+          description: "95th percentile latency for Dapr state store operations is {{ $value }} seconds"
+
+      - alert: DaprSecretStoreError
+        expr: |
+          rate(dapr_secret_operations_total{result="ERROR"}[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Dapr secret store errors"
+          description: "Dapr secret store has error rate of {{ $value }}"
+
+      - alert: HighDaprPubSubLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(dapr_pubsub_message_processing_duration_seconds_bucket[5m])) by (le, topic)) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High Dapr pub/sub latency for topic {{ $labels.topic }}"
+          description: "95th percentile latency for pub/sub processing is {{ $value }} seconds"

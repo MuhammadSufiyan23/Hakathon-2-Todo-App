@@ -1,0 +1,54 @@
+# Alertmanager configuration for routing alerts
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@todo-app.com'
+  smtp_auth_username: 'your-email@gmail.com'
+  smtp_auth_password: 'your-app-password'
+
+route:
+  group_by: ['alertname', 'team']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'default-receiver'
+  routes:
+    - matchers:
+        - severity =~ "critical|warning"
+      receiver: 'platform-team'
+      continue: true
+    - matchers:
+        - alertname =~ "HighErrorRate|HighLatency|ServiceDown"
+      receiver: 'oncall-webhook'
+      continue: true
+
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+    - to: 'platform-team@example.com'
+      send_resolved: true
+
+  - name: 'platform-team'
+    email_configs:
+    - to: 'platform-team@example.com'
+      send_resolved: true
+    webhook_configs:
+    - url: 'http://alert-webhook-svc:8080/alert'
+      send_resolved: true
+
+  - name: 'oncall-webhook'
+    webhook_configs:
+    - url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+      send_resolved: true
+      http_config:
+        tls_config:
+          insecure_skip_verify: true
+
+templates:
+- '/etc/alertmanager/template/*.tmpl'
+
+inhibit_rules:
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity = "warning"
+    equal: ['alertname', 'team']

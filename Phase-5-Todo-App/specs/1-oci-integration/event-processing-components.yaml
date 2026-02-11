@@ -1,0 +1,98 @@
+# Dapr component for Kafka pubsub (used for task events)
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: task-pubsub
+  namespace: backend
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: "oci-streaming-service:9092"  # Placeholder for actual OCI Streaming Service endpoint
+  - name: authRequired
+    value: "true"
+  - name: consumerGroup
+    value: "task-processor-group"
+  - name: clientID
+    value: "task-publisher"
+  - name: saslUsername
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: username
+  - name: saslPassword
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: password
+  - name: maxMessageBytes
+    value: "2048576"
+  - name: consumeRetryInterval
+    value: "100ms"
+---
+# Dapr component for reminder events
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: reminder-pubsub
+  namespace: workers
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: "oci-streaming-service:9092"  # Placeholder for actual OCI Streaming Service endpoint
+  - name: authRequired
+    value: "true"
+  - name: consumerGroup
+    value: "reminder-processor-group"
+  - name: clientID
+    value: "reminder-publisher"
+  - name: saslUsername
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: username
+  - name: saslPassword
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: password
+  - name: maxMessageBytes
+    value: "2048576"
+  - name: consumeRetryInterval
+    value: "100ms"
+---
+# Dapr component for task update events
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: task-update-pubsub
+  namespace: backend
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: "oci-streaming-service:9092"  # Placeholder for actual OCI Streaming Service endpoint
+  - name: authRequired
+    value: "true"
+  - name: consumerGroup
+    value: "task-update-processor-group"
+  - name: clientID
+    value: "task-update-publisher"
+  - name: saslUsername
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: username
+  - name: saslPassword
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: password
+  - name: maxMessageBytes
+    value: "2048576"
+  - name: consumeRetryInterval
+    value: "100ms"

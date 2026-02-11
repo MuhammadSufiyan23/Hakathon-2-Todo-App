@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+  labels:
+    app: todo-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "todo-backend"
+        dapr.io/app-port: "8000"
+        dapr.io/log-level: "debug"
+    spec:
+      containers:
+      - name: todo-backend
+        image: beautiful-todo-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: BETTER_AUTH_SECRET
+          value: "your-super-secret-auth-key-here-change-this-in-production"
+        - name: DATABASE_URL
+          value: "sqlite:///./todo_app.db"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend-service
+spec:
+  selector:
+    app: todo-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-frontend
+  labels:
+    app: todo-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-frontend
+  template:
+    metadata:
+      labels:
+        app: todo-frontend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "todo-frontend"
+        dapr.io/log-level: "debug"
+    spec:
+      containers:
+      - name: todo-frontend
+        image: beautiful-todo-frontend:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-frontend-service
+spec:
+  selector:
+    app: todo-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer  # This will expose the frontend externally

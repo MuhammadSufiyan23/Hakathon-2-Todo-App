@@ -1,0 +1,231 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Dapr System Dashboard",
+    "tags": ["dapr", "sidecar", "microservices"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "5s",
+    "schemaVersion": 16,
+    "version": 1,
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "timepicker": {
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"],
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Dapr Sidecar Status",
+        "type": "stat",
+        "span": 3,
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "count(dapr_runtime_started) by (app_id)",
+            "legendFormat": "{{app_id}}",
+            "refId": "A"
+          }
+        ],
+        "valueName": "current",
+        "prefix": "",
+        "postfix": " sidecars",
+        "colorValue": true,
+        "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a34"]
+      },
+      {
+        "id": 2,
+        "title": "Dapr Runtime Uptime",
+        "type": "stat",
+        "span": 3,
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "avg(time() - dapr_runtime_build_info{version!=\"\"})",
+            "refId": "A"
+          }
+        ],
+        "valueName": "current",
+        "prefix": "",
+        "postfix": " seconds",
+        "colorValue": true,
+        "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a34"]
+      },
+      {
+        "id": 3,
+        "title": "Dapr HTTP Client Requests",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(dapr_http_client_request_count[5m])) by (app_id, method)",
+            "legendFormat": "{{app_id}} - {{method}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Dapr HTTP Server Requests",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(dapr_http_server_request_count[5m])) by (app_id, method)",
+            "legendFormat": "{{app_id}} - {{method}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Dapr gRPC Client Requests",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(dapr_grpc_io_client_completed_rpcs[5m])) by (grpc_service)",
+            "legendFormat": "{{grpc_service}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Dapr State Store Operations",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(rate(dapr_statestore_operations_total[5m])) by (app_id, operation)",
+            "legendFormat": "{{app_id}} - {{operation}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Operations/sec",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Dapr PubSub Messages",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(rate(dapr_pubsub_messages_received_total[5m])) by (topic)",
+            "legendFormat": "{{topic}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Messages/sec",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Dapr Secret Store Access",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(rate(dapr_secret_operations_total[5m])) by (app_id, operation)",
+            "legendFormat": "{{app_id}} - {{operation}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Operations/sec",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Dapr Component Health",
+        "type": "graph",
+        "span": 6,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "dapr_component_loaded",
+            "legendFormat": "{{app_id}} - {{component_name}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Status",
+            "show": true
+          }
+        ]
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "app_id",
+          "type": "query",
+          "query": "label_values(dapr_runtime_started, app_id)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        },
+        {
+          "name": "component_type",
+          "type": "custom",
+          "options": [
+            {"value": "statestore", "label": "State Store"},
+            {"value": "pubsub", "label": "Pub/Sub"},
+            {"value": "secretstore", "label": "Secret Store"},
+            {"value": "bindings", "label": "Bindings"}
+          ],
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": []
+    },
+    "refresh": "5s",
+    "schemaVersion": 16,
+    "version": 1
+  },
+  "folderId": 0,
+  "overwrite": false
+}

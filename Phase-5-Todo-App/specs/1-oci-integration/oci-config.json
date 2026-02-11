@@ -1,0 +1,14 @@
+{
+  "compartmentId": "${var.compartment_id}",
+  "region": "${var.region}",
+  "okeClusterName": "todo-app-cluster",
+  "vcnName": "todo-app-vcn",
+  "subnetNames": [
+    "todo-app-public-subnet",
+    "todo-app-private-subnet"
+  ],
+  "registryNamespace": "todo-app-registry",
+  "loadBalancerShape": "flexible",
+  "loadBalancerFlexMin": 10,
+  "loadBalancerFlexMax": 100
+}

@@ -1,0 +1,308 @@
+# OpenAPI Specification: Scheduler Service
+
+openapi: 3.0.3
+info:
+  title: Scheduler Service
+  description: Service for managing reminders and scheduled tasks
+  version: 1.0.0
+servers:
+  - url: http://scheduler-service:8000
+    description: Internal service URL
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /v1/reminders:
+    post:
+      summary: Create a new reminder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - taskId
+                - reminderTime
+              properties:
+                userId:
+                  type: string
+                taskId:
+                  type: string
+                reminderTime:
+                  type: string
+                  format: date-time
+                reminderType:
+                  type: string
+                  enum: [due-date, custom, recurring]
+                notificationChannels:
+                  type: array
+                  items:
+                    type: string
+                    enum: [email, in-app, push]
+                  default: ["in-app"]
+                description:
+                  type: string
+                recurring:
+                  type: object
+                  properties:
+                    interval:
+                      type: string
+                      enum: [daily, weekly, monthly]
+                    endDate:
+                      type: string
+                      format: date-time
+      responses:
+        '201':
+          description: Reminder created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      summary: List reminders for user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, triggered, cancelled]
+        - name: reminderType
+          in: query
+          schema:
+            type: string
+            enum: [due-date, custom, recurring]
+      responses:
+        '200':
+          description: List of reminders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reminders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reminder'
+                  total:
+                    type: integer
+
+  /v1/reminders/{reminderId}:
+    get:
+      summary: Get a specific reminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reminder details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update a reminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderUpdate'
+      responses:
+        '200':
+          description: Reminder updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reminder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Cancel a reminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reminder cancelled successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/reminders/{reminderId}/trigger:
+    post:
+      summary: Manually trigger a reminder
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reminder triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    Reminder:
+      type: object
+      required:
+        - id
+        - userId
+        - taskId
+        - reminderTime
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        taskId:
+          type: string
+        reminderTime:
+          type: string
+          format: date-time
+        reminderType:
+          type: string
+          enum: [due-date, custom, recurring]
+        notificationChannels:
+          type: array
+          items:
+            type: string
+            enum: [email, in-app, push]
+        status:
+          type: string
+          enum: [pending, triggered, cancelled]
+        description:
+          type: string
+        recurring:
+          type: object
+          properties:
+            interval:
+              type: string
+              enum: [daily, weekly, monthly]
+            endDate:
+              type: string
+              format: date-time
+            nextOccurrence:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        triggeredAt:
+          type: string
+          format: date-time
+
+    ReminderUpdate:
+      type: object
+      properties:
+        reminderTime:
+          type: string
+          format: date-time
+        notificationChannels:
+          type: array
+          items:
+            type: string
+            enum: [email, in-app, push]
+        status:
+          type: string
+          enum: [pending, cancelled]
+
+    TriggerResult:
+      type: object
+      required:
+        - reminderId
+        - status
+        - triggeredAt
+      properties:
+        reminderId:
+          type: string
+        status:
+          type: string
+          enum: [success, failed]
+        triggeredAt:
+          type: string
+          format: date-time
+        details:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

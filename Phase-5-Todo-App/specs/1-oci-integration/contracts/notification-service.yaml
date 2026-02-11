@@ -1,0 +1,248 @@
+# OpenAPI Specification: Notification Service
+
+openapi: 3.0.3
+info:
+  title: Notification Service
+  description: Service for handling notifications based on reminder events
+  version: 1.0.0
+servers:
+  - url: http://notification-service:8000
+    description: Internal service URL
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /v1/notifications:
+    post:
+      summary: Send a notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - type
+                - message
+              properties:
+                userId:
+                  type: string
+                  description: Recipient user ID
+                type:
+                  type: string
+                  enum: [email, in-app, push]
+                  description: Notification channel type
+                message:
+                  type: string
+                  description: Notification message content
+                subject:
+                  type: string
+                  description: Notification subject/title
+                taskId:
+                  type: string
+                  description: Associated task ID (optional)
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+                  default: medium
+                  description: Priority level
+      responses:
+        '202':
+          description: Notification accepted for processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notificationId:
+                    type: string
+                  status:
+                    type: string
+                    example: "accepted"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/notifications/{notificationId}:
+    get:
+      summary: Get notification status
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/users/{userId}/preferences:
+    get:
+      summary: Get user notification preferences
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+
+    put:
+      summary: Update user notification preferences
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferences'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  schemas:
+    Notification:
+      type: object
+      required:
+        - id
+        - userId
+        - type
+        - message
+        - status
+        - createdAt
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [email, in-app, push]
+        message:
+          type: string
+        subject:
+          type: string
+        taskId:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, delivered, failed]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserPreferences:
+      type: object
+      properties:
+        userId:
+          type: string
+        emailNotifications:
+          type: boolean
+          default: true
+        inAppNotifications:
+          type: boolean
+          default: true
+        pushNotifications:
+          type: boolean
+          default: true
+        notificationSchedule:
+          type: object
+          properties:
+            startTime:
+              type: string
+              format: time
+            endTime:
+              type: string
+              format: time
+        taskReminders:
+          type: object
+          properties:
+            dueDateReminders:
+              type: boolean
+              default: true
+            customReminders:
+              type: boolean
+              default: true
+            notifyBeforeHours:
+              type: integer
+              default: 24
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

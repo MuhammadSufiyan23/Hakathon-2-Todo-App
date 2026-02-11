@@ -1,0 +1,65 @@
+# Dapr component for Kafka pubsub (OCI Streaming Service)
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: default
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: "{{.kafkaEndpoint}}"  # Will be replaced with actual OCI Streaming Service endpoint
+  - name: authRequired
+    value: "true"
+  - name: saslUsername
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: username
+  - name: saslPassword
+    valueFrom:
+      secretKeyRef:
+        name: kafka-secrets
+        key: password
+  - name: consumerGroup
+    value: "dapr-consumer-group"
+  - name: clientID
+    value: "dapr-kafka-client"
+---
+# Dapr component for PostgreSQL state store
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: postgresql-statestore
+  namespace: default
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+  - name: connectionString
+    valueFrom:
+      secretKeyRef:
+        name: postgresql-secrets
+        key: connectionString
+  - name: actorStateStore
+    value: "true"
+---
+# Dapr component for OCI Vault secret store
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: oci-vault-secrets
+  namespace: default
+spec:
+  type: secretstores.hashicorp.vault
+  version: v1
+  metadata:
+  - name: vaultAddr
+    value: "https://vault.oci.service"  # Placeholder for OCI Vault endpoint
+  - name: skipVerify
+    value: "false"
+  - name: kvVers
+    value: "2"
+  - name: tokenMountPath
+    value: "/etc/vault/token"

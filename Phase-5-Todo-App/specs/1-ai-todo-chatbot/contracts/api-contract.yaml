@@ -1,0 +1,181 @@
+# API Contract: AI Todo Chatbot
+
+**Feature**: 1-ai-todo-chatbot
+**Date**: 2026-02-02
+**Status**: Defined
+
+## Overview
+
+This document defines the API contracts for the AI Todo Chatbot integration, specifying endpoints, request/response formats, and error handling.
+
+## Endpoints
+
+### POST /api/{user_id}/chat
+
+**Description**: Handles chat interactions between user and AI assistant, processes natural language commands, and manages conversation flow.
+
+**Authentication**: Bearer token via Better Auth (user_id extracted from JWT)
+
+**Path Parameters**:
+- user_id: String (required) - The authenticated user's ID
+
+**Request Body**:
+```json
+{
+  "message": "string (required) - The user's message to the AI assistant",
+  "conversation_id": "integer (optional) - Existing conversation ID, if continuing conversation"
+}
+```
+
+**Response Body**:
+```json
+{
+  "conversation_id": "integer - The conversation ID for this interaction",
+  "response": "string - The AI assistant's response to the user",
+  "tool_calls": [
+    {
+      "tool_name": "string - Name of the MCP tool invoked",
+      "parameters": "object - Parameters passed to the tool",
+      "result": "object - Result from the tool execution"
+    }
+  ],
+  "timestamp": "string - ISO 8601 timestamp of the response"
+}
+```
+
+**Success Response (200 OK)**:
+- Status: 200
+- Body: Response object as defined above
+
+**Error Responses**:
+- 400 Bad Request: Invalid request format or missing required fields
+- 401 Unauthorized: Invalid or missing authentication token
+- 403 Forbidden: User attempting to access another user's data
+- 404 Not Found: Conversation ID provided but not found
+- 500 Internal Server Error: Server error during processing
+
+**Example Request**:
+```json
+{
+  "message": "Add a task to buy groceries",
+  "conversation_id": null
+}
+```
+
+**Example Response**:
+```json
+{
+  "conversation_id": 123,
+  "response": "I've added the task 'buy groceries' to your list.",
+  "tool_calls": [
+    {
+      "tool_name": "add_task",
+      "parameters": {
+        "user_id": "user123",
+        "title": "buy groceries"
+      },
+      "result": {
+        "success": true,
+        "task_id": 456,
+        "task_title": "buy groceries"
+      }
+    }
+  ],
+  "timestamp": "2026-02-02T10:30:00Z"
+}
+```
+
+## MCP Tool Contracts
+
+### add_task
+**Description**: Creates a new task for the user
+**Parameters**:
+- user_id: String (required) - The user's ID
+- title: String (required) - The task title
+- description: String (optional) - The task description
+
+**Returns**:
+- success: Boolean
+- task_id: Integer - The ID of the created task
+- task_title: String - The title of the created task
+
+### list_tasks
+**Description**: Lists tasks for the user
+**Parameters**:
+- user_id: String (required) - The user's ID
+- status: String (optional) - Filter by status ("all", "pending", "completed")
+
+**Returns**:
+- success: Boolean
+- tasks: Array of task objects with id, title, description, completed status
+
+### complete_task
+**Description**: Marks a task as completed
+**Parameters**:
+- user_id: String (required) - The user's ID
+- task_id: Integer (required) - The ID of the task to complete
+
+**Returns**:
+- success: Boolean
+- task_id: Integer - The ID of the completed task
+- completed: Boolean - The completion status
+
+### delete_task
+**Description**: Deletes a task for the user
+**Parameters**:
+- user_id: String (required) - The user's ID
+- task_id: Integer (required) - The ID of the task to delete
+
+**Returns**:
+- success: Boolean
+- task_id: Integer - The ID of the deleted task
+
+### update_task
+**Description**: Updates a task for the user
+**Parameters**:
+- user_id: String (required) - The user's ID
+- task_id: Integer (required) - The ID of the task to update
+- title: String (optional) - The new task title
+- description: String (optional) - The new task description
+
+**Returns**:
+- success: Boolean
+- task_id: Integer - The ID of the updated task
+- updated_fields: Object - The fields that were updated
+
+## Security Requirements
+
+1. **Authentication**: All endpoints require valid JWT token from Better Auth
+2. **Authorization**: User_id in JWT must match the user_id in the request
+3. **Data Isolation**: Users can only access their own data
+4. **Input Validation**: All inputs must be validated before processing
+5. **Rate Limiting**: API endpoints should implement rate limiting to prevent abuse
+
+## Performance Requirements
+
+1. **Response Time**: 90% of requests should respond within 3 seconds
+2. **Availability**: API should be available 99.9% of the time
+3. **Scalability**: Should handle up to 1000 concurrent users
+4. **Resource Usage**: Should not exceed 512MB memory per instance
+
+## Error Handling
+
+### Client Errors (4xx)
+- 400: Invalid request format or parameters
+- 401: Missing or invalid authentication
+- 403: Attempted access to unauthorized resources
+- 404: Requested resource not found
+- 422: Unprocessable entity (validation errors)
+
+### Server Errors (5xx)
+- 500: Internal server error
+- 502: Bad gateway (external service error)
+- 503: Service unavailable
+- 504: Gateway timeout
+
+## Logging Requirements
+
+1. **Request Logging**: Log all incoming requests with user_id, endpoint, and timestamp
+2. **Error Logging**: Log all errors with full context for debugging
+3. **Security Logging**: Log authentication attempts and authorization failures
+4. **Audit Trail**: Log all data modification operations
