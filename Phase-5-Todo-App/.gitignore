@@ -55,3 +55,8 @@ coverage/
 # Database
 *.db
 *.db-journal
+
+# Sensitive files
+backend.env
+helmfiles/values.yaml
+k8s-manifests/01-secrets.yaml
